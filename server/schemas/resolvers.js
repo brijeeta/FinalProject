@@ -4,7 +4,16 @@ const jwt = require('jsonwebtoken')
 const secret = 'mysecretsshhhhh';
 const expiration = '2h';
 const { UserInputError } = require('apollo-server');
-const { validateRegisterInput } = require('../utils/validators')
+const { validateRegisterInput, validateLoginInput } = require('../utils/validators')
+
+function generateToken(user) {
+    return jwt.sign({
+        id: user.id,
+        email: user.email,
+        username: user.username,
+    }, secret, { expiresIn: expiration })
+
+}
 
 const resolvers = {
     Query: {
@@ -46,11 +55,7 @@ const resolvers = {
             })
             const res = await newUser.save();
             // jwt token 
-            const token = jwt.sign({
-                id: res.id,
-                email: res.email,
-                username: res.username,
-            }, secret, { expiresIn: expiration })
+            const token = generateToken(res);
 
             return {
                 ...res._doc,
@@ -58,7 +63,33 @@ const resolvers = {
                 token
             }
 
+        },
+        // login resolvers  
+        async login(parent, { username, password }, context, info) {
+            const { errors, valid } = validateLoginInput(username, password)
+            const user = await User.findOne({ username });
+            if (!valid) {
+                throw new UserInputError('Errors', { errors })
+            }
+            if (!user) {
+                errors.general = 'User not found'
+                throw new UserInputError('User not found', { errors })
+            }
+            const match = await bcrypt.compare(password, user.password);
+            if (!match) {
+                errors.general = 'credentials doesnot match'
+                throw new UserInputError('credentials doesnot match', { errors })
+            }
+
+            const token = generateToken(user);
+
+            return {
+                ...user._doc,
+                id: user._id,
+                token
+            }
         }
+
     }
 };
 
