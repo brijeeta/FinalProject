@@ -1,8 +1,16 @@
 const { gql } = require('apollo-server-express');
+const { User } = require('../models');
 
 const typeDefs = gql `
-  type Query {
-    sayHi:String!
+
+    type Post {
+          id: ID!,
+          body: String!,
+          createdAt:String!,
+          username: String!
+    }
+    type Query{
+      getPosts: [Post]
     }
 `;
 
