@@ -1,7 +1,7 @@
 const { gql } = require('apollo-server-express');
 const { User } = require('../models');
 
-const typeDefs = gql `
+const typeDefs = gql`
 
     type Post {
           id: ID!,
@@ -11,6 +11,25 @@ const typeDefs = gql `
     }
     type Query{
       getPosts: [Post]
+    }
+
+    input RegisterInput{
+         username: String!,
+         password:String!,
+         confirmPassword: String!,
+         email: String!
+        }
+
+        type User {
+          id: ID!,
+          email:String!,
+          token: String!,
+          username: String!,
+          createdAt: String!
+        }
+
+    type Mutation{
+      register(registerInput:RegisterInput):User!
     }
 `;
 
